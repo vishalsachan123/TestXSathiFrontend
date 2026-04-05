@@ -6,7 +6,7 @@ export default function ExamResult() {
   const navigate = useNavigate();
 
   // Retrieve the structured data passed from ExamPlayground
-  const { results = [], stats = null } = location.state || {};
+  const { results = [], stats = null, ai_feedback = null } = location.state || {};
 
   // Safety fallback if someone navigates here directly without taking a test
   if (!stats) {
@@ -26,6 +26,11 @@ export default function ExamResult() {
   }
 
   const percentage = Math.round((stats.score / stats.total) * 100);
+  const feedbackMap = new Map();
+
+  ai_feedback?.wrong_questions_feedback?.forEach((item) => {
+    feedbackMap.set(item.questionNumber, item);
+  });
 
   return (
     <div className="min-h-screen bg-[#0B0D17] text-slate-200 font-sans p-4 md:p-8">
@@ -70,6 +75,33 @@ export default function ExamResult() {
           </div>
         </div>
 
+        {ai_feedback && (
+          <div className="mb-10 bg-[#141625] border border-slate-800 p-6 rounded-2xl">
+            
+            <h2 className="text-lg font-semibold text-white mb-4">
+              AI Analysis
+            </h2>
+
+            <div className="mb-4">
+              <p className="text-red-400 font-medium mb-2">Weaknesses</p>
+              <ul className="list-disc pl-5 text-sm text-slate-300">
+                {ai_feedback?.final_summary?.weaknesses?.map((w: string, i: number) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-emerald-400 font-medium mb-2">Suggestions</p>
+              <ul className="list-disc pl-5 text-sm text-slate-300">
+                {ai_feedback?.final_summary?.suggestions?.map((s: string, i: number) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
         {/* Detailed Review Section */}
         <h2 className="text-xl font-semibold text-white mb-6">
           Detailed Review
@@ -79,6 +111,8 @@ export default function ExamResult() {
           {results.map((item: any, index: number) => {
             const isCorrect = item.userResponse === item.correctAnswer;
             const isSkipped = item.userResponse === null;
+
+            const ai = !isCorrect ? feedbackMap.get(item.questionNumber) : null;
 
             return (
               <div
@@ -140,8 +174,31 @@ export default function ExamResult() {
                   })}
                 </div>
 
+                {/* AI Feedback Block */}
+                {ai && (
+                  <div className="ml-12 mt-4 bg-[#252836] border border-slate-700 p-4 rounded-xl">
+                    
+                    <span className="text-yellow-400 text-sm font-semibold block mb-2">
+                      AI Feedback
+                    </span>
+                    
+                    <p className="text-slate-300 text-sm mb-3">
+                      {ai.feedback}
+                    </p>
+
+                    <ul className="list-disc pl-5 text-slate-400 text-sm space-y-1">
+                      {ai.steps.map((step: string, idx: number) => (
+                        <li key={idx}>{step}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {/* Explanation Block */}
-                <div className="ml-12 bg-[#1C1F2E] border border-slate-700/50 p-4 rounded-xl">
+                <div className="ml-12 mt-3 bg-[#1C1F2E] border border-slate-700/50 p-4 rounded-xl">
+
+
+
                   <span className="text-emerald-400 text-sm font-semibold block mb-1">
                     Explanation
                   </span>
