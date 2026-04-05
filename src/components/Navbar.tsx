@@ -51,10 +51,11 @@ export default function Navbar() {
         {/* Logo */}
         <div className="text-2xl font-bold tracking-tight">
           <Link to="/">
-            <span className="text-[#5A52E5]">Text</span>
+            <span className="text-[#5A52E5]">Test</span>
             <span className={isDarkPage ? "text-white" : "text-slate-800"}>
               X
             </span>
+            <span className="text-[#5A52E5]">Saathi</span>
           </Link>
         </div>
 

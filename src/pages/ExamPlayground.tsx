@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import axios from "axios";
 import {
   ArrowLeft,
   MessageCircle,
@@ -12,6 +13,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { QUESTION_BANK } from "../data/questionbank";
 import Chatbot from "../components/Chatbot";
 import Swal from "sweetalert2";
+
+const API = import.meta.env.VITE_API_URL;
 
 export default function ExamPlayground() {
   const navigate = useNavigate();
@@ -88,29 +91,44 @@ export default function ExamPlayground() {
   //       },
   //     });
   //   };
-  const handleFinalSubmit = () => {
-    Swal.fire({
-      title: "Submit Exam?",
-      text: "Once submitted, you cannot change your answers.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Submit",
-      cancelButtonText: "Review Answers",
-      confirmButtonColor: "#5A52E5",
-      cancelButtonColor: "#6b7280",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const finalResults = questions.map((q, idx) => ({
-          questionNumber: idx + 1,
-          questionText: q.text,
-          options: q.options,
-          correctAnswer: q.correct,
-          userResponse: answers[idx] !== undefined ? answers[idx] : null,
-          explanation: q.explanation,
-        }));
+const handleFinalSubmit = () => {
+  Swal.fire({
+    title: "Submit Exam?",
+    text: "Once submitted, you cannot change your answers.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, Submit",
+    cancelButtonText: "Review Answers",
+    confirmButtonColor: "#5A52E5",
+    cancelButtonColor: "#6b7280",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const finalResults = questions.map((q, idx) => ({
+        questionNumber: idx + 1,
+        questionText: q.text,
+        options: q.options,
+        correctAnswer: q.correct,
+        userResponse: answers[idx] !== undefined ? answers[idx] : null,
+        explanation: q.explanation,
+      }));
+
+      try {
+        const response = await axios.post(
+          `${API}/gen/evaluateAnswers`,
+          {
+            results: finalResults,
+            exam: type.toUpperCase(),
+            subject: subjects
+          }
+        );
+
+        console.log("Backend Response 👉", response.data);
+
+        // ✅ FIX: use inside try
+        const data = response.data.data;
 
         const score = finalResults.filter(
-          (r) => r.userResponse === r.correctAnswer,
+          (r) => r.userResponse === r.correctAnswer
         ).length;
 
         navigate("/exam-result", {
@@ -122,11 +140,16 @@ export default function ExamPlayground() {
               attempted: answeredCount,
               unattempted: unansweredCount,
             },
+            ai_feedback: data, // ✅ pass AI response
           },
         });
+
+      } catch (error) {
+        console.error("API Error ❌", error);
       }
-    });
-  };
+    }
+  });
+};
   if (totalQuestions === 0) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#0B0D17] text-white">
