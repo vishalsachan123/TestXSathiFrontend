@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { QUESTION_BANK } from "../data/questionbank";
+import { QUESTION_BANK } from "../data/questionBank";
 import Chatbot from "../components/Chatbot";
 import Swal from "sweetalert2";
 
