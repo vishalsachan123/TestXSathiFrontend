@@ -1,9 +1,12 @@
 {
   "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": [
-      "/assets/*",
-      "/favicon.ico"
-    ]
+    "rewrite": "/index.html"
+  },
+  "mimeTypes": {
+    ".js": "text/javascript",
+    ".jsx": "text/javascript",
+    ".ts": "text/javascript",
+    ".tsx": "text/javascript",
+    ".css": "text/css"
   }
 }
