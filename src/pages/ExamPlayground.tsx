@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import axios from "axios";
 import {
   ArrowLeft,
@@ -103,7 +103,7 @@ const handleFinalSubmit = () => {
     cancelButtonColor: "#6b7280",
   }).then(async (result) => {
     if (result.isConfirmed) {
-      const finalResults = questions.map((q, idx) => ({
+      const finalResults = questions.map((q: any, idx: number) => ({
         questionNumber: idx + 1,
         questionText: q.text,
         options: q.options,
@@ -128,7 +128,7 @@ const handleFinalSubmit = () => {
         const data = response.data.data;
 
         const score = finalResults.filter(
-          (r) => r.userResponse === r.correctAnswer
+          (r: any) => r.userResponse === r.correctAnswer
         ).length;
 
         navigate("/exam-result", {
@@ -263,7 +263,7 @@ const handleFinalSubmit = () => {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {currentQuestionData.options.map((opt, idx) => {
+              {currentQuestionData.options.map((opt: string, idx: number) => {
                 const isSelected = currentAnswer === idx;
                 const isCorrect = currentQuestionData.correct === idx;
 
