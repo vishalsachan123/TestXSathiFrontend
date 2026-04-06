@@ -83,7 +83,7 @@ export const HomePage = () => {
 
       {/* Footer */}
       <footer className="text-center py-8 text-slate-400 text-sm bg-[#F8F9FF]">
-        © 2026 ParikshaSathi — Smart Exam Platform
+        © 2026 TestXSaathi — Smart Exam Platform
       </footer>
     </div>
   );

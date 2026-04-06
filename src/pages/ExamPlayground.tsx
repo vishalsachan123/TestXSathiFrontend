@@ -113,12 +113,18 @@ const handleFinalSubmit = () => {
       }));
 
       try {
+        const token = localStorage.getItem("token");
         const response = await axios.post(
           `${API}/gen/evaluateAnswers`,
           {
             results: finalResults,
             exam: type.toUpperCase(),
             subject: subjects
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}` // your token here
+            }
           }
         );
 
@@ -375,11 +381,20 @@ const handleFinalSubmit = () => {
       </div>
 
       {/* --- 2. Implement the new Chatbot Component Here --- */}
+      {/* <Chatbot
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        questionNumber={activeQuestion}
+        questionData={currentQuestionData}
+      /> */}
       <Chatbot
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         questionNumber={activeQuestion}
         questionData={currentQuestionData}
+        userSelectedOption={currentAnswer}
+        examType={type}
+        subjects={subjects}
       />
     </div>
   );
