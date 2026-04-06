@@ -27,13 +27,13 @@ export default function SignIn() {
       if (response.status === 200) {
         const token = response.data.token;
         localStorage.setItem("token", token);
-        navigate("/");
         Swal.fire({
           title: "Success!",
           text: "Login successful",
           icon: "success",
           confirmButtonText: "OK",
         });
+        navigate("/");
       }
     } catch (e) {
       Swal.fire({

@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, X, Bot } from "lucide-react";
+import axios from "axios";
+
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+
 
 interface QuestionData {
   text: string;
@@ -13,20 +20,47 @@ interface ChatbotProps {
   onClose: () => void;
   questionNumber: number;
   questionData: QuestionData;
+  userSelectedOption?: number;
+  examType: string;
+  subjects: string[];
 }
 
 interface ChatMessage {
   id: string;
-  sender: "ai" | "user";
+  sender: "assistant" | "user";
   text: string;
   isContextBlock?: boolean;
 }
+
+interface QuestionContextPayload {
+  question: string;
+  options: string[];
+  userSelectedOption: string | null;
+  correctOption: string;
+  questionNo: number;
+  examType: string;
+  subjects: string[];
+}
+
+interface ChatRequestPayload {
+  question_context: QuestionContextPayload;
+  user_query: string;
+  history: {
+    role: "assistant" | "user";
+    content: string;
+  }[];
+}
+
+const API = import.meta.env.VITE_API_URL;
 
 export default function Chatbot({
   isOpen,
   onClose,
   questionNumber,
   questionData,
+  userSelectedOption,
+  examType,
+  subjects,
 }: ChatbotProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -42,35 +76,98 @@ export default function Chatbot({
     setMessages([
       {
         id: "1",
-        sender: "ai",
+        sender: "assistant",
         isContextBlock: true,
         text: `You're asking about Question ${questionNumber}. What didn't you understand about the explanation?`,
       },
     ]);
   }, [questionNumber, questionData]);
 
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const buildChatHistory = (): { role: "assistant" | "user"; content: string }[] => {
+    return messages
+      .filter((msg) => !msg.isContextBlock)
+      .slice(-5)
+      .map((msg) => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: msg.text,
+      }));
+  };
+
+  const buildPayload = (userQuery: string) => {
+    const payload: ChatRequestPayload = {
+      question_context: {
+        questionNo: questionNumber,
+        question: questionData.text,
+        options: questionData.options,
+        userSelectedOption:
+          userSelectedOption !== undefined
+            ? questionData.options[userSelectedOption]
+            : null,
+        correctOption: questionData.options[questionData.correct],
+        examType: examType,
+        subjects: subjects,
+      },
+      user_query: userQuery,
+      history: buildChatHistory(),
+    };
+
+    return payload;
+  };
+
+  const sendQueryToBackend = async (payload: ChatRequestPayload) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post(`${API}/gen/api/chat`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(response);
+      const data = response.data.answer;
+      return data;
+    } catch (error) {
+      console.error("Backend error:", error);
+      return { answer: "Server error. Please try again." };
+    }
+  };
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!inputValue.trim()) return;
 
+    const userQuery = inputValue;
+
+    console.log(inputValue);
     // Add user message
+
     const newUserMsg: ChatMessage = {
       id: Date.now().toString(),
       sender: "user",
-      text: inputValue,
+      text: userQuery,
     };
+
     setMessages((prev) => [...prev, newUserMsg]);
     setInputValue("");
 
+    const payload = buildPayload(userQuery);
+
+    console.log("Sending payload →", payload);
     // Simulate AI response (Replace this with real API call later)
+
+    const backendResponse = await sendQueryToBackend(payload);
+
+    console.log(messages);
     setTimeout(() => {
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        sender: "ai",
-        text: "That's a great question! To understand this deeply, let's look at the formula again. Which part of the substitution is confusing?",
+        sender: "assistant",
+        text: backendResponse || "I couldn't generate a response for that.",
       };
       setMessages((prev) => [...prev, aiResponse]);
     }, 1000);
+    console.log(messages);
   };
 
   return (
@@ -135,7 +232,7 @@ export default function Chatbot({
             )}
 
             {/* Standard Chat Bubble */}
-            <div
+            {/* <div
               className={`max-w-[85%] p-3 text-sm rounded-2xl ${
                 msg.sender === "user"
                   ? "bg-[#5A52E5] text-white rounded-tr-sm"
@@ -143,6 +240,43 @@ export default function Chatbot({
               }`}
             >
               {msg.text}
+            </div> */}
+            <div
+              className={`max-w-[85%] p-3 text-sm rounded-2xl ${
+                msg.sender === "user"
+                  ? "bg-[#5A52E5] text-white rounded-tr-sm"
+                  : "bg-[#1C1F2E] text-slate-200 border border-slate-800 rounded-tl-sm"
+              }`}
+            >
+              {msg.sender === "assistant" ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code({ node, inline, className, children, ...props }: any) {
+                      const match = /language-(\w+)/.exec(className || "");
+                      return !inline && match ? (
+                        <SyntaxHighlighter
+                          style={oneDark}
+                          language={match[1]}
+                          PreTag="div"
+                          {...props}
+                        >
+                          {String(children).replace(/\n$/, "")}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <code className="bg-slate-800 px-1 rounded">
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                  // className="prose prose-invert prose-sm max-w-none"
+                >
+                  {msg.text}
+                </ReactMarkdown>
+              ) : (
+                msg.text
+              )}
             </div>
           </div>
         ))}

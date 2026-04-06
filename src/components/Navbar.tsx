@@ -12,11 +12,6 @@ export default function Navbar() {
     location.pathname === "/signup" ||
     location.pathname === "/exam-playground";
 
-  //   const handleLogout = () => {
-
-  //     localStorage.removeItem("token");
-  //     navigate("/signin");
-  //   };
   const handleLogout = () => {
     Swal.fire({
       title: "Are you sure?",

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -27,11 +28,33 @@ export default function SignUp() {
         password: password,
       });
       if (response.status === 201) {
+          Swal.fire({
+          title: "Success 🎉",
+          text: "Account created successfully",
+          icon: "success",
+          confirmButtonText: "Go to Login",
+        });
         navigate("/signin");
-        alert("Sign up success");
+      }else{
+        Swal.fire({
+          title: "Error!",
+          text: "Something went wrong",
+          icon: "success",
+          confirmButtonText: "Ok",
+        })
       }
+      
     } catch (e) {
-      alert(e);
+      let message = "Something went wrong";
+      if (axios.isAxiosError(e)) {
+        message = e.response?.data?.detail || e.message;
+      }
+      Swal.fire({
+      title: "Signup Failed",
+      text: message,
+      icon: "error",
+      confirmButtonText: "OK",
+    });
     }
   };
   return (
