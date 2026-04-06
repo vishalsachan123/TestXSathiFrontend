@@ -4,6 +4,7 @@
   },
   "mimeTypes": {
     ".js": "text/javascript",
+    ".mjs": "text/javascript",
     ".css": "text/css"
   }
 }
