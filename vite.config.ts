@@ -2,11 +2,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/',
+  base: "/", 
   build: {
-    outDir: 'dist'
-  },
+    outDir: "dist",      // Must match YAML output_location
+    assetsDir: "assets", // Keeps JS/CSS organized
+    emptyOutDir: true    // Cleans old builds
+  }
 });
